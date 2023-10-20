@@ -1,0 +1,108 @@
+﻿Relatório documentado Trabalho de Instalação Redes de Computadores 
+
+
+Trabalho de Redes - Grupo I
+        
+
+
+Integrantes do Grupo:
+ Rodrigo Marques Duarte - 14A
+         Pedro Henrique de Souza Costa - 14A
+        João Vitor Goncalves Pereira - 14A
+
+
+Máquinas Virtuais Utilizadas:
+        192.168.1.17 (Maquina 1)
+            192.168.1.18 (Maquina 2)
+
+
+Etapa 1: Serviço de sincronização de hora
+
+
+Inicialmente achamos que utilizar o timesyncd no primeiro servidor iria servir para sincronizar a hora nele e depois usarmos como servidor, mas depois percebemos ao conversar com o professor e pesquisar que seria melhor utilizar o chrony para criar um servidor e sincronizar data e hora no cliente (máquina 2). Vou começar explicando como fizemos com o timesyncd e depois o chrony.
+
+
+De início foi utilizado o comando: 
+ sudo apt update 
+para sincronizar os arquivos de índice e pacotes da fonte.
+Logo em seguida:
+         sudo apt install -y ntpdate 
+para instalar o ntpdate na máquina
+ sudo ntpdate pool.ntp.br 
+para utilizar o servidor de tempo padrão nacional.
+Em seguida foi necessário realizar a sincronização automática da VM 17 com o servidor.
+Para isso usamos o comando:
+sudo nano /etc/systemd/timesyncd.conf
+ para acessar o arquivo "timesync.conf" e conseguir editá-lo.
+Ao acessar adicionamos o seguinte:
+Time
+NTP=pool.ntp.br a.ntp.br
+FallbackNTP=b.ntp.br c.ntp.br
+para buscar as horas em alguns dos servidores npt.br
+Após isso foi necessário ativar o cliente NTP no systemd com os seguintes comandos:
+        sudo timedatectl set-ntp true
+        timedatectl status
+Com esse último é possível ver o status e conferir hora e data da máquina.
+
+
+Após isso, percebemos que deveríamos utilizar o chrony para conseguir criar um servidor que fornecesse as horas para o cliente da VM 18. Para começar foi necessário realizar a instalação do chrony na máquina com os seguintes comandos:
+        sudo apt install chrony
+Após isso foi acessado a pasta onde estava o arquivo de configuração do chrony
+cd /etc/chrony
+Em seguida acessamos o arquivo para editá-lo
+sudo nano chrony.conf
+Dentro do arquivo foi adicionado
+        pool a.st1.ntp.br iburst
+Para buscar a sincronização no servidor NTP.br
+E também o ip das duas máquinas, a 17 mais por precaução e a 18 para ser cliente e receber a sincronização.
+        allow 192.168.1.18
+allow 192.168.1.17
+Por fim, foi necessário reiniciar o chrony com o seguinte comando:
+        sudo systemctl restart chrony.service
+Com isso a data e hora na máquina 18 já apareciam corretamente ulizando o comando
+        date
+
+
+Etapa 2: Serviço Web e FTP
+Com a máquina 2 logada (IP: 192.168.1.18)
+De início foi utilizado 
+sudo apt update
+para sincronizar os arquivos de índice e pacotes da fonte.
+Logo em seguida foi usado 
+sudo apt install apache2 
+Para instalar o apache na máquina 
+sudo service apache2 start
+Para inicializar o servidor web
+
+
+Para checar o status e se foi inicializado corretamente usamos o comando 
+sudo service apache2 status
+Com o comando: 
+mkdir /var/www/site
+foi criado uma pasta para manutenção do index html e posteriormente os arquivos
+
+
+Em seguida foi necessário realizar a alteração da página web
+sudo nano /var/www/site/index.html
+Para acessar o arquivo "index.html" e conseguir editá-lo foi usado o sudo para acessar com as permissões de administrador. 
+
+
+Para tanto foi usado o comando para acessarmos os sites conhecidos dentro do servidor: 
+/etc/apache2/sites-available/ls
+Após isso precisamos alterar o arquivo de configurações para definirmos o apelido para o servidor. 
+sudo nano site.conf
+as configurações foram:
+        ServerAdmin RodrigoMarques@localhost
+        DocumentRoot /var/www/site
+        ServerName Aquiloso.com
+Note que o server name é o nome pelo qual o servidor terá de atender caso não fizermos a chamada pelo ip da máquina 2. 
+
+
+Com o servidor online fizemos a instalação do Git:
+sudo apt-get install git
+e usamos o comando
+git clone<endereço do repositório no github> 
+para armazenarmos os arquivos dentro do servidor.
+
+
+O github para também acesso aos arquivos pode ser acessado com o link : Zoiudp/Redes1: Repositorio para o trabalho de Redes de computadores (github.com)
